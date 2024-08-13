@@ -10,6 +10,7 @@ export default function Home() {
   const [gameState, setGameState] = useState("start");
   const [username, setUsername] = useState("");
   const [score, setScore] = useState(0);
+  const [correctSequence, setCorrectSequence] = useState([]);
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("username");
@@ -28,13 +29,18 @@ export default function Home() {
     setGameState("playing");
   };
 
-  const handleGameOver = (finalScore) => {
+  const handleGameOver = (finalScore, correctSequence) => {
     setScore(finalScore);
     setGameState("gameOver");
+
+    // Salvar a pontuação e a sequência no ranking
     const highScores = JSON.parse(localStorage.getItem("highScores") || "[]");
     highScores.push({ username, score: finalScore });
     highScores.sort((a, b) => b.score - a.score);
     localStorage.setItem("highScores", JSON.stringify(highScores.slice(0, 10)));
+
+    // Armazena a sequência correta
+    setCorrectSequence(correctSequence);
   };
 
   const handleRestart = () => {
@@ -54,7 +60,11 @@ export default function Home() {
         {gameState === "user" && <UserScreen onUser={handleUser} />}
         {gameState === "playing" && <GameScreen onGameOver={handleGameOver} />}
         {gameState === "gameOver" && (
-          <GameOverScreen score={score} onRestart={handleRestart} />
+          <GameOverScreen
+            score={score}
+            onRestart={handleRestart}
+            correctSequence={correctSequence}
+          />
         )}
       </Vortex>
     </div>

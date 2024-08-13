@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useCallback } from "react";
 
 /**
  * Lista de LEDs disponíveis no jogo.
@@ -46,19 +47,47 @@ export default function GameScreen({ onGameOver }) {
   const [score, setScore] = useState(0);
   const hasStartedRef = useRef(false);
 
-  useEffect(() => {
-    if (!hasStartedRef.current) {
-      hasStartedRef.current = true;
-      startNewRound();
-    }
-  }, []);
+  /**
+   * Função assíncrona para buscar uma sequência.
+   *
+   * @returns {Promise<number[]>} A sequência de números gerada.
+   * @throws {Error} Caso ocorra algum erro na busca da sequência.
+   */
+  const fetchSequence = useCallback(
+    async (numeroPiscadas) => {
+      setIsWaitingForSequence(true);
+      try {
+        const response = await axios.post(
+          "http://127.0.0.1:3000/api/sequencia/gerar",
+          {
+            numero_piscadas: numeroPiscadas,
+          }
+        );
+        if (response.data.codigo === "1") {
+          setIsWaitingForSequence(false);
+          return response.data.sequencia.map(Number);
+        } else {
+          throw new Error(response.data.mensagem);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar sequência:", error);
+        setIsWaitingForSequence(false);
+        return Array(score + 3)
+          .fill()
+          .map(() => Math.floor(Math.random() * 7) + 1);
+      }
+    },
+    [score]
+  );
+
+  console.log("Sequência:", sequence);
 
   /**
    * Inicia uma nova rodada do jogo.
    *
    * @returns {Promise<void>} Uma Promise que é resolvida quando a nova rodada é iniciada.
    */
-  const startNewRound = async () => {
+  const startNewRound = useCallback(async () => {
     round += 1;
     const numeroPiscadas = 3 + (round - 1);
     const newSequence = await fetchSequence(numeroPiscadas);
@@ -66,39 +95,14 @@ export default function GameScreen({ onGameOver }) {
     await new Promise((resolve) =>
       setTimeout(resolve, newSequence.length * 1000)
     ); // Tempo estimado da sequência
-  };
+  }, [fetchSequence]); // Adicione as dependências relevantes
 
-  /**
-   * Função assíncrona para buscar uma sequência.
-   *
-   * @returns {Promise<number[]>} A sequência de números gerada.
-   * @throws {Error} Caso ocorra algum erro na busca da sequência.
-   */
-  const fetchSequence = async (numeroPiscadas) => {
-    setIsWaitingForSequence(true);
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:3000/api/sequencia/gerar",
-        {
-          numero_piscadas: numeroPiscadas, // Começa com 3 e aumenta com a pontuação
-        }
-      );
-      if (response.data.codigo === "1") {
-        setIsWaitingForSequence(false);
-        return response.data.sequencia.map(Number); // Converte strings para números
-      } else {
-        throw new Error(response.data.mensagem);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar sequência:", error);
-      setIsWaitingForSequence(false);
-      return Array(score + 3)
-        .fill()
-        .map(() => Math.floor(Math.random() * 7) + 1);
+  useEffect(() => {
+    if (!hasStartedRef.current) {
+      hasStartedRef.current = true;
+      startNewRound();
     }
-  };
-
-  console.log("Sequência:", sequence);
+  }, [startNewRound]);
 
   /**
    * Acende e apaga um LED em sequência.
