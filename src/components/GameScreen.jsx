@@ -89,7 +89,7 @@ export default function GameScreen({ onGameOver }) {
    * @returns {Promise<void>} Uma Promise que é resolvida quando a nova rodada é iniciada.
    */
   const startNewRound = useCallback(async () => {
-    const numeroPiscadas = 3 + (round - 1);
+    const numeroPiscadas = 1 + (round - 1);
     const newSequence = await fetchSequence(numeroPiscadas);
     setSequence(newSequence);
     await new Promise((resolve) =>
@@ -118,46 +118,9 @@ export default function GameScreen({ onGameOver }) {
         console.log(`LED ${ledId} não encontrado`);
       }
 
-      // // Acende o LED
-      // await axios.post("http://127.0.0.1:3000/api/sequencia/acender", {
-      //   led_id: ledId,
-      // });
-      // console.log(`LED ${ledId} aceso`);
-
-      // // Espera pela duração especificada
-      // await new Promise((resolve) => setTimeout(resolve, duration));
-
-      //   // Apaga o LED
-      //   await axios.post("http://127.0.0.1:3000/api/sequencia/desligar", {
-      //     led_id: ledId,
-      //   });
-      //   console.log(`LED ${ledId} apagado`);
-
       // Acende o LED
-      fetch("http://192.168.232.225/echo", {
-        method: "POST",
-        body: led.onCode,
-      })
-        .then((response) => {
-          if (!response.ok) {
-            console.log("Failed to fetch");
-          }
-        })
-        .catch((error) => {
-          console.log("Failed to fetch", error);
-        });
-
-      // Espera pela duração especificada
-      await new Promise((resolve) => setTimeout(resolve, duration));
-
-      // Apaga o LED
-      await fetch("http://192.168.232.225/echo", {
-        method: "POST",
-        body: led.offCode,
-      }).then((response) => {
-        if (!response.ok) {
-          console.log("Failed to fetch");
-        }
+      await axios.post("http://127.0.0.1:3000/api/sequencia/acender", {
+        led_id: ledId,
       });
     } catch {}
   }, []);
