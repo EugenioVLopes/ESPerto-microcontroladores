@@ -36,7 +36,8 @@ export default function GameOverScreen({ score, onRestart, correctSequence }) {
       <h2 className="text-white text-4xl font-bold mb-4">Game Over</h2>
       <p className="text-white text-2xl mb-6">Sua pontuação: {score}</p>
       <h3 className="text-white text-2xl font-bold mb-4">
-        Sequência Correta: {correctSequence.map(String).join("-")}
+        Sequência Correta:{" "}
+        {correctSequence && correctSequence?.map(String).join("-")}
       </h3>
       {/* <p className="text-white text-xl mb-6"></p> */}
 
